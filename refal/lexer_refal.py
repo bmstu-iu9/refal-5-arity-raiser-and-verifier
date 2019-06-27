@@ -1,8 +1,9 @@
 #! python -v
 # -*- coding: utf-8 -*-
 
-from src.position import *
-from src.tokens import *
+from refal.position import *
+from refal.tokens import *
+from refal.constants import *
 
 from copy import deepcopy
 import sys
@@ -129,7 +130,7 @@ class Lexer(object):
                 new_pos = next_or_current(new_pos)
                 s += new_pos.letter()
             return IdentToken(s, Fragment(self.cur, new_pos))
-        return IdentToken(s, Fragment(self.cur, new_pos))
+        return IdentToken(s, Fragment(self.cur, self.cur))
 
     def read_symbol(self):
         new_pos = next_or_current(self.cur)
@@ -145,13 +146,14 @@ class Lexer(object):
                     s += new_pos.letter()
                     new_pos = next_or_current(new_pos)
                     if new_pos != next_or_current(new_pos):
-                        for i in range(0, 2):
+                        for _ in range(0, 2):
                             if new_pos.is_decimal_digit() or ("a" <= new_pos.letter() <= "f" or
                                                               "A" <= new_pos.letter() <= "F"):
                                 s += new_pos.letter()
                                 new_pos = next_or_current(new_pos)
                             else:
                                 return UnknownToken(s, Fragment(self.cur, new_pos))
+                        return CompositeSymbolToken(s, Fragment(self.cur, new_pos))
                 else:
                     return UnknownToken(s, Fragment(self.cur, new_pos))
             else:
@@ -177,13 +179,14 @@ class Lexer(object):
                     s += new_pos.letter()
                     new_pos = next_or_current(new_pos)
                     if new_pos != next_or_current(new_pos):
-                        for i in range(0, 2):
+                        for _ in range(0, 2):
                             if new_pos.is_decimal_digit() or ("a" <= new_pos.letter() <= "f" or
                                                               "A" <= new_pos.letter() <= "F"):
                                 s += new_pos.letter()
                                 new_pos = next_or_current(new_pos)
                             else:
                                 return UnknownToken(s, Fragment(self.cur, new_pos))
+                        return CharacterToken(s, Fragment(self.cur, new_pos))
                 else:
                     return UnknownToken(s, Fragment(self.cur, new_pos))
             else:
@@ -225,7 +228,8 @@ class Lexer(object):
         s += new_pos.letter()
         new_pos = next(new_pos, new_pos)
         s += new_pos.letter()
-        # sys.stdout.write("Recognize many-line comment[" + str(Fragment(self.cur, new_pos)) +  "]: " + s + "\n")
+        if DEBUG_MODE:
+            sys.stdout.write("Recognize many-line comment[" + str(Fragment(self.cur, new_pos)) + "]: " + s + "\n")
         new_pos = next_or_current(new_pos)
         self.cur = new_pos
 
@@ -236,7 +240,8 @@ class Lexer(object):
             s += new_pos.letter()
             new_pos = next_or_current(new_pos)
         new_pos = next_or_current(new_pos)
-        # sys.stdout.write("Recognize one-line comment[" + str(Fragment(self.cur, new_pos)) +  "]: " + s + "\n")
+        if DEBUG_MODE:
+            sys.stdout.write("Recognize one-line comment[" + str(Fragment(self.cur, new_pos)) + "]: " + s + "\n")
         self.cur = new_pos
 
     def next_token(self):
